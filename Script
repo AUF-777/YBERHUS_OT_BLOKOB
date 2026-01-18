@@ -1,0 +1,100 @@
+import pygame
+import random
+
+pygame.init()
+
+WIDHT = 400
+HEIGHT = 400
+win = pygame.display.set_mode((WIDHT, HEIGHT))
+screen = pygame.display.set_mode((WIDHT, HEIGHT))
+pygame.display.set_caption('Уклонись от врагов')
+tim = 5
+clock = pygame.time.Clock()
+font = pygame.font.SysFont('ofont.ru_Warm Pixel.ttf', 32)
+fnt = pygame.font.SysFont('ofont.ru_Warm Pixel.ttf', 95)
+
+class Player:
+    def __init__(self):
+        self.rect = pygame.Rect(180, 330, 40, 40)
+        self.speed = 6
+
+    def move(self, keys):
+        if keys[pygame.K_a]:
+            self.rect.x -= self.speed
+        if keys[pygame.K_d]:
+            self.rect.x += self.speed
+
+        self.rect.x = max(0, min(WIDHT - self.rect.width, self.rect.x))
+
+
+    def draw(self):
+        pygame.draw.rect(screen, (34, 255, 0), self.rect)
+
+class Block:
+    def __init__(self):
+        self.rect = pygame.Rect(random.randint(0, WIDHT - 30), -30, 35, 35)
+        self.speed = random.randint(3, 6)
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.top > HEIGHT:
+            self.rect.y = -30
+            self.rect.x = random.randint(0, WIDHT - 30)
+
+
+    def draw(self):
+        pygame.draw.rect(screen, (255, 0, 0), self.rect)
+
+
+class Game:
+    def __init__(self):
+        self.player = Player()
+        self.blocks = [Block()for i in range(3)]
+        self.running = True
+        self.score = 0
+
+    def events(self):
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                self.running = False
+
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        self.player.move(keys)
+
+
+        for block in self.blocks:
+            block.update()
+            if block.rect.colliderect(self.player.rect):
+                self.running = False
+
+
+        self.score += 1
+
+
+    def draw(self):
+        screen.fill((30, 30, 30))
+        self.player.draw()
+        for block in self.blocks:
+            block.draw()
+
+        if self.score >= 1000:
+            text = fnt.render(f"Ты победил", True, (0, 255, 0))
+            screen.blit(text, (1, 100))
+            self.blocks = [Block() for i in range(0)]
+
+        text = font.render(f"Очки : {self.score}", True, (0, 255, 0))
+        screen.blit(text, (15,15))
+        pygame.display.flip()
+
+
+    def run(self):
+        while self.running:
+            self.events()
+            self.update()
+            self.draw()
+            clock.tick(120)
+
+
+Game().run()
+pygame.quit()
